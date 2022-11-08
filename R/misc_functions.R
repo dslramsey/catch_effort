@@ -1,6 +1,7 @@
 
 
 calc_N<- function(samples, zones, A=NULL) {
+  
   N<- samples$N  # initial
   Nr<- samples$Nr # residual
   nsites<- length(zones)

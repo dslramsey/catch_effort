@@ -55,14 +55,14 @@ model{
     r[j] ~ dnorm(0, 1)
   }
   for(j in 1:K){
-    beta[j] ~ dnorm(0, 0.1)
+    beta[j] ~ dnorm(0, 0.2)
     kappa[j] ~ dnorm(muk, sprec)
   }
   
-  alpha ~ dnorm(0, 0.1)
-  muk ~ dnorm(0, 0.1)
+  alpha ~ dnorm(0, 0.2)
+  muk ~ dnorm(0, 0.2)
   sprec<- pow(sdk, -2)
-  sdk ~ dunif(0, 10)
+  sdk ~ dunif(0, 5)
   
 }
 ", fill=TRUE)
@@ -106,72 +106,7 @@ calc_N(pars, zones)
 
 calc_N(pars, zones, A=garea)
 
-win.graph(12,12)
-diagPlot(samp, params = c("beta","alpha"))
+win.graph(15,10)
+jagsUI::traceplot(samp, parameters = c("beta","alpha"))
 
-
-
-##---- Plots---------------------------------------
-
-dout<- calc_N(pars, zones, A=garea)
-Nhat<- dout$Nhat
-
-Nb<- Nhat %>% select(site,season,N,nlcl,nucl)
-Na<- Nhat %>% select(site,season,Nr,rlcl,rucl)
-names(Na)[3:5]<- c("N","nlcl","nucl")
-Nb<- Nb %>% mutate(status="Initial")
-Na<- Na %>% mutate(status="Residual")
-
-Nout<- bind_rows(Nb,Na)
-
-win.graph(11,6)
-Nout %>% ggplot(aes(season, N, color=status)) +
-  geom_line(position = position_dodge(width=0.1)) +
-  geom_pointrange(aes(ymin=nlcl, ymax=nucl), position=position_dodge(width=0.1)) +
-  facet_wrap(~site, nrow=2) +
-  scale_color_manual(values = c("cornflowerblue","brown1")) +
-  scale_x_continuous(breaks=c(1,2,3)) +
-  labs(x="Period",y=expression(paste("Density (deer/k",m^2,")")), color="Estimate") +
-  theme_bw() +
-  theme(axis.title.x = element_text(face="bold", size=15),
-        axis.title.y = element_text(face="bold", size=15),
-        axis.text = element_text(size=12),
-        legend.position = "bottom",
-        legend.title = element_text(face="bold", size=12),
-        legend.text = element_text(size=12))
-
-#--- Cumulative catch curves----------------------
-
-rmat<- abind(y[,,1],y[,,2],y[,,3])
-emat<- abind(eff[,,1],eff[,,2],eff[,,3])
-
-cumc<- t(apply(rmat,1,cumsum))
-cpue<- rmat/emat
-
-colnames(cumc)<-  paste0("P_",1:15)
-colnames(cpue)<- paste0("P_",1:15)
-
-cumc<- as_tibble(cumc)
-cpue<- as_tibble(cpue)
-
-cumc<- cumc %>% mutate(site=zones)
-cpue<- cpue %>% mutate(site=zones)
-
-cumc<- cumc %>% pivot_longer(!site, names_to = "Period", values_to = "Cumcatch")
-cpue<- cpue %>% pivot_longer(!site, names_to = "Period", values_to = "CPUE")
-
-catch<- left_join(cumc, cpue, by=c("site","Period"))
-
-win.graph(14,6)
-catch %>% filter(!(site %in% c("Brodribb area","Nunniong area"))) %>% 
-  ggplot(aes(Cumcatch, CPUE)) +
-  geom_point() +
-  geom_smooth(method="lm") +
-  facet_wrap(~site, scales="free", nrow=2) +
-  labs(x ="Cumulative removals") +
-  theme_bw() +
-  theme(axis.title.x = element_text(face="bold", size=15),
-        axis.title.y = element_text(face="bold", size=15),
-        axis.text = element_text(size=12),
-        legend.position = "bottom")
 

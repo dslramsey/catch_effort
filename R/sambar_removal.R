@@ -1,8 +1,10 @@
 
+library(plyr)
 library(tidyverse)
 library(nimble)
 library(MCMCvis)
 library(abind)
+library(bayesplot)
 
 source("R/misc_functions.r")
 
@@ -124,9 +126,11 @@ calc_N(pars, zones)
 
 calc_N(pars, zones, A=garea)
 
-win.graph(12,12)
-diagPlot(samp, params = c("beta","alpha"))
+win.graph(15,10)
+mcmc_trace(samp, regex_pars = c("beta","alpha"))
 
+win.graph(15,10)
+mcmc_dens_overlay(samp, regex_pars = c("beta","alpha"))
 
 
 ##---- Plots---------------------------------------
